@@ -45,6 +45,28 @@ class Tradier
         return $this->call('GET', $endpoint, $query);
     }
 
+    public function getOptionExpirations(string $symbol, ?array $additionalParams = []): array
+    {
+        $params = [
+            'symbol' => $symbol,
+        ] + $additionalParams;
+
+        $response = $this->get('markets/options/expirations', $params);
+
+        if ($response->expirations === null) {
+            throw new \TradierException("No expirations found for $symbol");
+        }
+
+        $expirations = [];
+
+        foreach ($response->expirations->date as $date) {
+            $date = new \DateTime($date);
+            $expirations[] = $date;
+        }
+
+        return $expirations;
+    }
+
     protected function getClient(): Client
     {
         return $this->client;

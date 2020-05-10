@@ -25,8 +25,7 @@ class ExpirationCommand extends BaseCommand
         $symbol = $input->getArgument('symbol');
 
         $tradier = $this->createTradier();
-        $expirations = $tradier->get('markets/options/expirations', [
-            'symbol' => $symbol,
+        $expirations = $tradier->getOptionExpirations($symbol, [
             'includeAllRoots' => 'true',
         ]);
 
@@ -38,8 +37,7 @@ class ExpirationCommand extends BaseCommand
 
         $now = new \DateTime('today');
 
-        foreach ($expirations->expirations->date as $date) {
-            $date = new \DateTime($date);
+        foreach ($expirations as $date) {
             $dte = ($date->diff($now))->days;
             $output->writeln($date->format('M j, Y') . " ($dte DTE)");
         }
