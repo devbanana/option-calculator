@@ -7,7 +7,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Devbanana\\OptionCalculator\\": "src/"
+            "Devbanana\\OptionCalculator\\": "src/",
+            "Devbanana\\OptionCalculator\\Tests\\": "tests/"
         }
     },
     "authors": [
