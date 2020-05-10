@@ -3,7 +3,8 @@
     "description": "Fetches options data and calculates spreads.",
     "type": "project",
     "require": {
-        "symfony/console": "^5.0"
+        "symfony/console": "^5.0",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "autoload": {
         "psr-4": {
