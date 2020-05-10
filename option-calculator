@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\Console\Application;
+use Devbanana\OptionCalculator\Command\ExpirationCommand;
+
+$dotenv = new Dotenv();
+$dotenv->loadEnv(__DIR__.'/.env');
+
+$application = new Application();
+
+$application->addCommands([
+    new ExpirationCommand(),
+]);
+
+$application->run();
