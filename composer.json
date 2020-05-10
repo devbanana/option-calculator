@@ -1,0 +1,20 @@
+{
+    "name": "devbanana/option-calculator",
+    "description": "Fetches options data and calculates spreads.",
+    "type": "project",
+    "require": {
+        "symfony/console": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Devbanana\\OptionCalculator\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Brandon Olivares",
+            "email": "programmer2188@gmail.com"
+        }
+    ],
+    "minimum-stability": "beta"
+}
