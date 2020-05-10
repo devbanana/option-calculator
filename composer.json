@@ -16,5 +16,8 @@
             "email": "programmer2188@gmail.com"
         }
     ],
-    "minimum-stability": "beta"
+    "minimum-stability": "beta",
+    "require-dev": {
+        "phpunit/phpunit": "^9.1"
+    }
 }
