@@ -15,7 +15,7 @@ class ExpirationCommand extends BaseCommand
     {
         $this
             ->setDescription('Lists options expirations')
-            ->setHelp('This commands lists all expirations for a given symbol.')
+            ->setHelp('This command lists all expirations for a given symbol.')
             ->addArgument('symbol', InputArgument::REQUIRED, 'Symbol')
         ;
     }
