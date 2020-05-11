@@ -25,7 +25,7 @@ class Tradier
             ]);
     }
 
-    public function call(string $method, string $endpoint, ?array $query = [])
+    public function call(string $method, string $endpoint, array $query = [])
     {
         $headers = [
             'Accept' => 'application/json',
@@ -40,7 +40,7 @@ class Tradier
         return json_decode((string)$response->getBody());
     }
 
-    public function get(string $endpoint, ?array $query = [])
+    public function get(string $endpoint, array $query = [])
     {
         return $this->call('GET', $endpoint, $query);
     }
