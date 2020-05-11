@@ -9,8 +9,8 @@ use GuzzleHttp\Client;
 class Tradier
 {
 
-    protected $client;
-    protected $token;
+    protected Client $client;
+    protected string $token;
 
     public function __construct(string $token, bool $sandbox = false)
     {
