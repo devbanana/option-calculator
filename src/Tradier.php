@@ -45,6 +45,16 @@ class Tradier
         return $this->call('GET', $endpoint, $query);
     }
 
+    public function getQuote(string $symbol, bool $greeks = false)
+    {
+        $response = $this->get('markets/quotes', [
+            'symbols' => $symbol,
+            'greeks' => $greeks === true ? 'true' : 'false',
+        ]);
+
+        return $response->quotes->quote;
+    }
+
     public function getOptionExpirations(string $symbol, ?array $additionalParams = []): array
     {
         $params = [
