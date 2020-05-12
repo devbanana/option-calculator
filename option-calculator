@@ -11,7 +11,7 @@ use Devbanana\OptionCalculator\Command\GetQuoteCommand;
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/.env');
 
-$application = new Application();
+$application = new Application('Option Calculator');
 
 $application->addCommands([
     new ListExpirationsCommand(),
