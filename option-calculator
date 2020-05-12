@@ -5,7 +5,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Console\Application;
-use Devbanana\OptionCalculator\Command\ExpirationCommand;
+use Devbanana\OptionCalculator\Command\ListExpirationsCommand;
 
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/.env');
@@ -13,7 +13,7 @@ $dotenv->loadEnv(__DIR__.'/.env');
 $application = new Application();
 
 $application->addCommands([
-    new ExpirationCommand(),
+    new ListExpirationsCommand(),
 ]);
 
 $application->run();
