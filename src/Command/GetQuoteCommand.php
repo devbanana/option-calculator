@@ -53,7 +53,7 @@ EOF
         $changeFmt->setTextAttribute(\NumberFormatter::POSITIVE_PREFIX, '+$');
         $changePercentFmt = new \NumberFormatter('en_US', \NumberFormatter::PERCENT);
         $changePercentFmt->setTextAttribute(\NumberFormatter::POSITIVE_PREFIX, '+');
-        $changePercentFmt->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 1);
+        $changePercentFmt->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 2);
         $intFmt = new \NumberFormatter('en_US', \NumberFormatter::DECIMAL);
         $percentFmt = new \NumberFormatter('en_US', \NumberFormatter::PERCENT);
         $percentFmt->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 2);
