@@ -5,6 +5,7 @@ namespace Devbanana\OptionCalculator\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -28,9 +29,13 @@ For options quotes, pass the option symbol, including expiration and strike pric
 For example, the SPY 06/19/20 300.0 call would be formatted like this:
 
 SPY200619C00300000
+
+If you want to refresh the quotes every few seconds, add the --refresh argument. To specify how many seconds between refresh (it defaults to 10), specify --interval=<seconds>.
 EOF
             )
             ->addArgument('symbol', InputArgument::REQUIRED, 'Stock or option symbol')
+            ->addOption('refresh', 'r', InputOption::VALUE_NONE, 'Refresh quote data')
+            ->addOption('interval', 'i', InputOption::VALUE_REQUIRED, 'Number of seconds between refresh', 10)
         ;
     }
 
@@ -40,8 +45,25 @@ EOF
 
         $tradier = $this->createTradier();
 
-        $quote = $tradier->getQuote($symbol, true);
+        if ($input->getOption('refresh') === true) {
+            $section = $output->section();
 
+            while (true) {
+                $quote = $tradier->getQuote($symbol, true);
+                $this->renderQuoteTable($quote, $section);
+                sleep($input->getOption('interval'));
+                $section->clear();
+            }
+        } else {
+            $quote = $tradier->getQuote($symbol, true);
+            $this->renderQuoteTable($quote, $output);
+        }
+
+        return 0;
+    }
+
+    protected function renderQuoteTable(\stdClass $quote, OutputInterface $output): void
+    {
         $headers = [
             new TableCell($quote->description, ['colspan' => 2]),
         ];
@@ -109,7 +131,5 @@ EOF
             ->setStyle('borderless')
             ->render()
         ;
-
-        return 0;
     }
 }
