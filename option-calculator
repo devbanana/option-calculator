@@ -7,6 +7,7 @@ use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Console\Application;
 use Devbanana\OptionCalculator\Command\ListExpirationsCommand;
 use Devbanana\OptionCalculator\Command\GetQuoteCommand;
+use Devbanana\OptionCalculator\Command\ChainCommand;
 
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/.env');
@@ -16,6 +17,7 @@ $application = new Application('Option Calculator');
 $application->addCommands([
     new ListExpirationsCommand(),
     new GetQuoteCommand(),
+    new ChainCommand(),
 ]);
 
 $application->run();

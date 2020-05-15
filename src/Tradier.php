@@ -77,6 +77,23 @@ class Tradier
         return $expirations;
     }
 
+    public function getOptionChains(string $symbol, \DateTime $expiration, ?bool $greeks = false)
+    {
+        $response = $this->get('markets/options/chains', [
+            'symbol' => $symbol,
+            'expiration' => $expiration->format('Y-m-d'),
+            'greeks' => $greeks === true ? 'true' : 'false',
+        ]);
+
+        $chains = [];
+
+        foreach ($response->options->option as $option) {
+            $chains[] = $option;
+        }
+
+        return $chains;
+    }
+
     protected function getClient(): Client
     {
         return $this->client;
