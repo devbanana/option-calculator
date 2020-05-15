@@ -1,3 +1,4 @@
 vendor/
 .env.local
 .DS_Store
+.php_cs.cache
