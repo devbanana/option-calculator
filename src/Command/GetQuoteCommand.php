@@ -19,7 +19,8 @@ class GetQuoteCommand extends BaseCommand
     {
         $this
             ->setDescription('Gets quotes for stocks or options')
-            ->setHelp(<<<EOF
+            ->setHelp(
+                <<<EOF
 This command allows you to fetch quotes for stocks or options.
 
 For a stock quote, simply pass the stock symbol.

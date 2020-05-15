@@ -8,7 +8,6 @@ use GuzzleHttp\Client;
 
 class Tradier
 {
-
     protected Client $client;
     protected string $token;
 
@@ -20,7 +19,7 @@ class Tradier
             : 'https://api.tradier.com/v1/'
         ;
 
-            $this->client = new Client([
+        $this->client = new Client([
                 'base_uri' => $uri,
             ]);
     }
@@ -103,5 +102,4 @@ class Tradier
     {
         return $this->token;
     }
-
 }

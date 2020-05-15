@@ -32,7 +32,7 @@ class ChainCommand extends BaseCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-            $helper = $this->getHelper('question');
+        $helper = $this->getHelper('question');
 
         if (!$input->getArgument('symbol')) {
             $question = new Question('Symbol: ');
