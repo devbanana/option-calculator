@@ -492,8 +492,8 @@ EOF
                     $strikeSelection = [...$lower, ...$higher];
                 }
 
-                $strikeSelection += ['go back'];
                 $strikeSelection = array_combine(range(1, count($strikeSelection)), array_values($strikeSelection));
+                $strikeSelection += ['go back'];
                 $strikeQuestion = new ChoiceQuestion('Strike:', $strikeSelection);
                 $strike = $helper->ask($input, $output, $strikeQuestion);
                 if ($strike === 'go back') {
