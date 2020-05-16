@@ -447,6 +447,7 @@ EOF
         // Repeat until a strike is chosen.
         while (true) {
             $method = $helper->ask($input, $output, $methodQuestion);
+            $selectedChain = null;
 
             if ($method === 'manually') {
                 $manual = new Question('Strike (enter "<" to choose another method): ');
@@ -533,7 +534,6 @@ EOF
                     }
                 }
 
-                $selectedChain = null;
                 $diff = null;
                 foreach ($possibleChains as $possibleChain) {
                     $chainDiff = abs($possibleChain->greeks->delta - $delta);
