@@ -143,6 +143,12 @@ class Tradier
         return $response->order;
     }
 
+    public function getBalances()
+    {
+        $response = $this->get("accounts/{$this->accountId}/balances");
+        return $response->balances;
+    }
+
     protected function getClient(): Client
     {
         return $this->client;

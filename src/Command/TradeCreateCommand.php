@@ -55,12 +55,23 @@ EOF
             '',
         ]);
 
+        $balances = $this->tradier->getBalances();
+        $table = new Table($output);
+        $table
+            ->addRow(['Stock Buying Power', $this->formatCurrency($balances->margin->stock_buying_power)])
+            ->addRow(['Option Buying Power', $this->formatCurrency($balances->margin->option_buying_power)])
+            ->setStyle('compact')
+            ->render()
+        ;
+        $output->writeln('');
+
         $helper = $this->getHelper('question');
         $this->symbol = $helper->ask($input, $output, new Question('Symbol: '));
 
         $quote = $this->getQuote();
 
         $output->writeln([
+            '',
             $quote->description,
             $this->formatCurrency($quote->last),
             $this->formatChange($quote->change, $quote->change_percentage),
