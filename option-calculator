@@ -8,6 +8,7 @@ use Symfony\Component\Console\Application;
 use Devbanana\OptionCalculator\Command\ListExpirationsCommand;
 use Devbanana\OptionCalculator\Command\GetQuoteCommand;
 use Devbanana\OptionCalculator\Command\ChainCommand;
+use Devbanana\OptionCalculator\Command\TradeCreateCommand;
 
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/.env');
@@ -18,6 +19,7 @@ $application->addCommands([
     new ListExpirationsCommand(),
     new GetQuoteCommand(),
     new ChainCommand(),
+    new TradeCreateCommand(),
 ]);
 
 $application->run();
