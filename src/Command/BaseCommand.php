@@ -70,4 +70,14 @@ abstract class BaseCommand extends Command
         }
         return $output;
     }
+
+    protected function export(string $file, array $headers, array $rows)
+    {
+        $handle = fopen($file, 'w');
+        fputcsv($handle, $headers);
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        fclose($handle);
+    }
 }

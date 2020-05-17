@@ -149,6 +149,44 @@ class Tradier
         return $response->balances;
     }
 
+    public function lookup(string $q, ?string $exchanges = null, ?string $types = null)
+    {
+        $params = [];
+        $params['q'] = $q;
+        if ($exchanges) {
+            $params['exchanges'] = $exchanges;
+        }
+        if ($types) {
+            $params['types'] = $types;
+        }
+
+        $response = $this->get('markets/lookup', $params);
+
+        if ($response->securities === null) {
+            throw new TradierException('No matches found.');
+        }
+
+        return $response->securities->security;
+    }
+
+    public function getHistoricalQuotes(string $symbol, string $interval = 'daily', ?\DateTime $start, ?\DateTime $end = null)
+    {
+        $params = [];
+        $params['symbol'] = $symbol;
+        $params['interval'] = $interval;
+
+        if (isset($start)) {
+            $params['start'] = $start->format('Y-m-d');
+        }
+        if (isset($end)) {
+            $params['end'] = $end->format('Y-m-d');
+        }
+
+        $response = $this->get('markets/history', $params);
+
+        return $response->history->day;
+    }
+
     protected function getClient(): Client
     {
         return $this->client;
