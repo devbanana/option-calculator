@@ -57,7 +57,10 @@ EOF
             ['Option Buying Power' => $this->formatCurrency($balances->margin->option_buying_power)]
         );
 
-        $this->symbol = $io->ask('Symbol');
+        $symbolQuestion = new Question('Symbol');
+        $symbolQuestion->setAutocompleterCallback([$this, 'lookup']);
+
+        $this->symbol = $io->askQuestion($symbolQuestion);
 
         $quote = $this->getQuote();
 
@@ -550,5 +553,25 @@ EOF
         }
 
         return $selectedChain;
+    }
+
+    public function lookup($value)
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        try {
+            $results = $this->tradier->lookup($value);
+        } catch (TradierException $e) {
+            return [];
+        }
+
+        $matches = [];
+        foreach ($results as $result) {
+            $matches[] = $result->symbol;
+        }
+
+        return $matches;
     }
 }
