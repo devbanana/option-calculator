@@ -7,10 +7,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
-use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
-use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Helper\TableSeparator;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Devbanana\OptionCalculator\Tradier;
 use Devbanana\OptionCalculator\Exception\TradierException;
 
@@ -48,40 +46,31 @@ EOF
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->tradier = $this->createTradier();
+        $io = new SymfonyStyle($input, $output);
 
-        $output->writeln([
-            '<options=bold>New Trade</>',
-            '=========',
-            '',
-        ]);
+        $io->title('New Trade');
 
         $balances = $this->tradier->getBalances();
-        $table = new Table($output);
-        $table
-            ->addRow(['Stock Buying Power', $this->formatCurrency($balances->margin->stock_buying_power)])
-            ->addRow(['Option Buying Power', $this->formatCurrency($balances->margin->option_buying_power)])
-            ->setStyle('compact')
-            ->render()
-        ;
-        $output->writeln('');
+
+        $io->definitionList(
+            ['Stock Buying Power' => $this->formatCurrency($balances->margin->stock_buying_power)],
+            ['Option Buying Power' => $this->formatCurrency($balances->margin->option_buying_power)]
+        );
 
         $helper = $this->getHelper('question');
-        $this->symbol = $helper->ask($input, $output, new Question('Symbol: '));
+        $this->symbol = $io->ask('Symbol');
 
         $quote = $this->getQuote();
 
-        $output->writeln([
-            '',
+        $io->text([
             $quote->description,
             $this->formatCurrency($quote->last),
             $this->formatChange($quote->change, $quote->change_percentage),
-            '',
         ]);
 
-        $anotherLeg = new ConfirmationQuestion('Add another leg? ', false);
         do {
-            $this->addLeg($input, $output);
-        } while ($helper->ask($input, $output, $anotherLeg));
+            $this->addLeg($io);
+        } while ($io->confirm('Add another leg?', false));
 
         $limitQuestion = new Question('Limit (enter "r" to refresh): ');
         $limitQuestion->setValidator(function ($limit) {
@@ -98,13 +87,13 @@ EOF
         });
 
         if ($this->class === 'equity' || $this->class === 'option') {
-            $orderTypeQuestion = new ChoiceQuestion('Order type:', [
+            $orderTypeChoices = [
                 1 => 'market',
                 'limit',
                 'stop limit',
                 'stop',
-            ]);
-            $this->type = str_replace(' ', '_', $helper->ask($input, $output, $orderTypeQuestion));
+            ];
+            $this->type = str_replace(' ', '_', $io->choice('Order type', $orderTypeChoices));
 
             if ($this->type === 'limit' || $this->type === 'stop_limit') {
                 while (true) {
@@ -117,9 +106,9 @@ EOF
                     $bid = $quote->bid;
                     $ask = $quote->ask;
 
-                    $output->writeln($this->showBidAsk($bid, $ask, $this->class === 'option'));
+                    $this->showBidAsk($io, $bid, $ask, $this->class === 'option');
 
-                    $limit = $helper->ask($input, $output, $limitQuestion);
+                    $limit = $io->askQuestion($limitQuestion);
                     if ($limit !== 'r') {
                         break;
                     }
@@ -128,8 +117,7 @@ EOF
             }
 
             if ($this->type === 'stop' || $this->type === 'stop_limit') {
-                $stopQuestion = new Question('Stop price: ');
-                $stopQuestion->setValidator(function ($stop) {
+                $this->stop = $io->ask('Stop price', null, function ($stop) {
                     if (!is_numeric($stop)) {
                         throw new \RuntimeException('Please enter a valid stop price.');
                     } elseif ($stop == 0) {
@@ -139,16 +127,16 @@ EOF
                     }
                     return floatval($stop);
                 });
-                $this->stop = $helper->ask($input, $output, $stopQuestion);
             }
         } else {
-            $orderTypeQuestion = new ChoiceQuestion('Order type:', [
+            $orderTypeChoices = [
                 1 => 'market',
                 'debit',
                 'credit',
                 'even',
-            ]);
-            $this->type = $helper->ask($input, $output, $orderTypeQuestion);
+            ];
+
+            $this->type = $io->choice('Order type', $orderTypeChoices);
 
             if ($this->type === 'debit' || $this->type === 'credit') {
                 while (true) {
@@ -171,9 +159,9 @@ EOF
                         [$bid, $ask] = [$ask, $bid];
                     }
 
-                    $output->writeln($this->showBidAsk($bid, $ask, true, true));
+                    $this->showBidAsk($io, $bid, $ask, true, true);
 
-                    $limit = $helper->ask($input, $output, $limitQuestion);
+                    $limit = $io->askQuestion($limitQuestion);
                     if ($limit !== 'r') {
                         break;
                     }
@@ -182,13 +170,12 @@ EOF
             }
         }
 
-        $durationQuestion = new ChoiceQuestion('Duration:', [
+        $duration = $io->choice('Duration', [
             1 => 'day',
             'GTC',
             'pre-market',
             'post-market',
-        ], 1);
-        $duration = $helper->ask($input, $output, $durationQuestion);
+        ], 'day');
 
         // Change pre-market to pre, and post-market to post
         $this->duration = str_replace('-market', '', $duration);
@@ -213,57 +200,45 @@ EOF
         try {
             $order = $this->tradier->previewOrder($params);
         } catch (TradierException $e) {
-            $error = $e->getMessage();
-            $output->writeln("<error>$error</error>");
+            $io->error($e->getMessage());
             return 1;
         }
 
-        $table = new Table($output);
-        $table->addRow([
-            'Commission',
-            $this->formatCurrency($order->commission),
-        ]);
+        $list = [];
+        $list[] = 'Order Details';
+        $list[] = ['Commission' => $this->formatCurrency($order->commission)];
 
         if ($order->order_cost < 0) {
-            $table->addRow([
-                'Order Proceeds',
-                $this->formatCurrency(abs($order->order_cost)),
-            ]);
+            $list[] = ['Order Proceeds' => $this->formatCurrency(abs($order->order_cost))];
         } else {
-            $table->addRow([
-                'Order Cost',
-                $this->formatCurrency($order->order_cost),
-            ]);
+            $list[] = ['Order Cost' => $this->formatCurrency($order->order_cost)];
         }
 
-        $table->addRow([
-            'Est. Total Cost',
-            $this->formatCurrency($order->cost),
-        ]);
-        $table->setStyle('compact');
-        $table->render();
+        $list[] = ['Est. Total Cost' => $this->formatCurrency($order->cost)];
 
-        $confirm = $helper->ask($input, $output, new ConfirmationQuestion('Send this order? ', false));
+        $io->definitionList(...$list);
+
+        $confirm = $io->confirm('Send this order?', false);
         if ($confirm === true) {
             $order = $this->tradier->createOrder($params);
-            $output->writeln("Order created: order ID #" . $order->id);
+            $io->success(['Order created', 'Order ID: ' . $order->id]);
         } else {
-            $output->writeln('Order was not submitted.');
+            $io->note('Order was not submitted.');
         }
 
         return 0;
     }
 
-    protected function addLeg($input, $output)
+    protected function addLeg(SymfonyStyle $io)
     {
-        $class = $this->getClass($input, $output);
-        $side = $this->getSide($input, $output, $class);
-        $quantity = $this->getQuantity($input, $output, $class);
+        $class = $this->getClass($io);
+        $side = $this->getSide($io, $class);
+        $quantity = $this->getQuantity($io, $class);
 
         if ($class === 'option') {
-            $expiration = $this->getExpiration($input, $output);
-            $optionType = $this->getOptionType($input, $output);
-            $chain = $this->getChain($input, $output, $expiration, $optionType);
+            $expiration = $this->getExpiration($io);
+            $optionType = $this->getOptionType($io);
+            $chain = $this->getChain($io, $expiration, $optionType);
             $optionSymbol = $chain->symbol;
         }
 
@@ -277,38 +252,34 @@ EOF
         }
     }
 
-    protected function showBidAsk(float $bid, float $ask, bool $includeMid = false, bool $includeDebitCredit = false): array
+    protected function showBidAsk(SymfonyStyle $io, float $bid, float $ask, bool $includeMid = false, bool $includeDebitCredit = false): void
     {
         if ($includeMid === true) {
             $mid = $this->getMid($bid, $ask);
         }
 
-        $messages = [];
-        $bidMsg = '';
-        $midMsg = '';
-        $askMsg = '';
+        $list = [];
+        $bidLabel = '';
+        $midLabel = '';
+        $askLabel = '';
         if ($includeDebitCredit === true) {
-            $bidMsg = $bid < 0 ? 'Credit ' : 'Debit ';
+            $bidLabel = $bid < 0 ? 'Credit ' : 'Debit ';
             if (isset($mid)) {
-                $midMsg = $mid < 0 ? 'Credit ' : 'Debit ';
+                $midLabel = $mid < 0 ? 'Credit ' : 'Debit ';
             }
-            $askMsg = $ask < 0 ? 'Credit ' : 'Debit ';
+            $askLabel = $ask < 0 ? 'Credit ' : 'Debit ';
         }
 
-        $bidMsg .= 'Bid: ' . $this->formatCurrency(abs($bid));
+        $bidLabel .= 'Bid';
+        $list[] = [$bidLabel => $this->formatCurrency(abs($bid))];
         if (isset($mid)) {
-            $midMsg .= 'Mid: ' . $this->formatCurrency(abs($mid));
+            $midLabel .= 'Mid';
+            $list[] = [$midLabel => $this->formatCurrency(abs($mid))];
         }
-        $askMsg .= 'Ask: ' . $this->formatCurrency(abs($ask));
+        $askLabel .= 'Ask';
+        $list[] = [$askLabel => $this->formatCurrency(abs($ask))];
 
-        $messages[] = $bidMsg;
-        if (isset($mid)) {
-            $messages[] = $midMsg;
-        }
-        $messages[] = $askMsg;
-        $messages[] = '';
-
-        return $messages;
+        $io->definitionList(...$list);
     }
 
     protected function getQuote(): \stdClass
@@ -345,16 +316,13 @@ EOF
         }
     }
 
-    protected function getClass(InputInterface $input, OutputInterface $output): string
+    protected function getClass(SymfonyStyle $io): string
     {
-        $classQuestion = new ChoiceQuestion(
-            'Security type:',
-            [
-                1 => 'equity',
-                'option',
-            ]
-        );
-        $class = $this->getHelper('question')->ask($input, $output, $classQuestion);
+        $choices = [
+            1 => 'equity',
+            'option',
+        ];
+        $class = $io->choice('Security type', $choices);
 
         if (!isset($this->class) || $this->class !== 'combo') {
             if (!isset($this->class)) {
@@ -373,32 +341,29 @@ EOF
         return $class;
     }
 
-    protected function getSide(InputInterface $input, OutputInterface $output, string $class): string
+    protected function getSide(SymfonyStyle $io, string $class): string
     {
-        $sideQuestion = new ChoiceQuestion('Side:', $this->getAllowedSides($class));
-        return str_replace(' ', '_', $this->getHelper('question')->ask($input, $output, $sideQuestion));
+        return str_replace(' ', '_', $io->choice('Side', $this->getAllowedSides($class)));
     }
 
-    protected function getQuantity(InputInterface $input, OutputInterface $output, string $class): int
+    protected function getQuantity(SymfonyStyle $io, string $class): int
     {
-        $quantityQuestion = new Question($class === 'option' ? 'Contracts: ' : 'Shares: ');
-        $quantityQuestion->setValidator(function ($quantity) {
+        $validator = function ($quantity) {
             if (!is_numeric($quantity) || intval($quantity) <= 0) {
                 throw new \RuntimeException('Please enter a valid numeric quantity.');
             }
 
             return intval($quantity);
-        });
-        return $this->getHelper('question')->ask($input, $output, $quantityQuestion);
+        };
+
+        return $io->ask($class === 'option' ? 'Contracts: ' : 'Shares: ', null, $validator);
     }
 
-    protected function getExpiration(InputInterface $input, OutputInterface $output): \DateTime
+    protected function getExpiration(SymfonyStyle $io): \DateTime
     {
-        $helper = $this->getHelper('question');
         $expirations = $this->tradier->getOptionExpirations($this->symbol, ['includeAllRoots' => true]);
 
-        $expirationQuestion = new Question('Expiration (enter "list" to list all expirations): ');
-        $expirationQuestion->setValidator(function ($expiration) use ($expirations) {
+        $validator = function ($expiration) use ($expirations) {
             if ($expiration === 'list') {
                 return $expiration;
             }
@@ -421,8 +386,9 @@ EOF
             }
 
             return $expiration;
-        });
-        $expiration = $helper->ask($input, $output, $expirationQuestion);
+        };
+
+        $expiration = $io->ask('Expiration (enter "list" to list all expirations)', null, $validator);
 
         if ($expiration === 'list') {
             $expirationChoices = [];
@@ -430,39 +396,35 @@ EOF
                 $expirationChoices[$i+1] = $exp->format('M j, Y');
             }
 
-            $expirationQuestion = new ChoiceQuestion('Expiration:', $expirationChoices);
-            $expiration = new \DateTime($helper->ask($input, $output, $expirationQuestion));
+            $expiration = $io->choice('Expiration', $expirationChoices);
         }
 
         return $expiration;
     }
 
-    protected function getOptionType(InputInterface $input, OutputInterface $output): string
+    protected function getOptionType(SymfonyStyle $io): string
     {
-        $optionTypeQuestion = new ChoiceQuestion('Option type:', [1 => 'call', 'put']);
-        return $this->getHelper('question')->ask($input, $output, $optionTypeQuestion);
+        return $io->choice('Option type', [1 => 'call', 'put']);
     }
 
-    protected function getChain(InputInterface $input, OutputInterface $output, \DateTime $expiration, string $optionType): \stdClass
+    protected function getChain(SymfonyStyle $io, \DateTime $expiration, string $optionType): \stdClass
     {
-        $helper = $this->getHelper('question');
         $strikes = $this->tradier->getOptionStrikes($this->symbol, $expiration);
         $chains = $this->tradier->getOptionChains($this->symbol, $expiration, true);
 
-        $methodQuestion = new ChoiceQuestion('How would you like to enter the strike?', [
+        $methodChoices = [
             1 => 'manually',
             'select from list',
             'by delta',
-        ]);
+        ];
 
         // Repeat until a strike is chosen.
         while (true) {
-            $method = $helper->ask($input, $output, $methodQuestion);
+            $method = $io->choice('How would you like to enter the strike?', $methodChoices);
             $selectedChain = null;
 
             if ($method === 'manually') {
-                $manual = new Question('Strike (enter "<" to choose another method): ');
-                $manual->setValidator(function ($strike) use ($strikes) {
+                $validator = function ($strike) use ($strikes) {
                     if ($strike === '<') {
                         return $strike;
                     } elseif (!is_numeric($strike)) {
@@ -471,14 +433,14 @@ EOF
                         throw new \RuntimeException('That is not a valid strike.');
                     }
                     return floatval($strike);
-                });
+                };
 
-                $strike = $helper->ask($input, $output, $manual);
-                if ($manual === '<') {
+                $strike = $io->ask('Strike (enter "<" to choose another method)', null, $validator);
+                if ($strike === '<') {
                     continue;
                 }
             } elseif ($method === 'select from list') {
-                $numStrikesQuestion = new ChoiceQuestion('Number of strikes to view:', [
+                $numStrikesChoices = [
                     1 => 6,
                     8,
                     10,
@@ -488,8 +450,8 @@ EOF
                     18,
                     20,
                     'all',
-                ]);
-                $numStrikes = $helper->ask($input, $output, $numStrikesQuestion);
+                ];
+                $numStrikes = $io->choice('How many strikes would you like to view?', $numStrikesChoices);
 
                 if ($numStrikes === 'all') {
                     $strikeSelection = $strikes;
@@ -505,16 +467,14 @@ EOF
                 }
 
                 $strikeSelection = array_combine(range(1, count($strikeSelection)), array_values($strikeSelection));
-                $strikeSelection += ['go back'];
-                $strikeQuestion = new ChoiceQuestion('Strike:', $strikeSelection);
-                $strike = $helper->ask($input, $output, $strikeQuestion);
+                $strikeSelection[] = 'go back';
+                $strike = $io->choice('Strike', $strikeSelection);
                 if ($strike === 'go back') {
                     continue;
                 }
                 $strike = floatval($strike);
             } elseif ($method === 'by delta') {
-                $deltaQuestion = new Question('Delta (enter "<" to go back)');
-                $deltaQuestion->setValidator(function ($delta) use ($optionType) {
+                $validator = function ($delta) use ($optionType) {
                     if ($delta === '<') {
                         return $delta;
                     } elseif (!is_numeric($delta)) {
@@ -525,8 +485,9 @@ EOF
                         $delta *= -1;
                     }
                     return $delta;
-                });
-                $delta = $helper->ask($input, $output, $deltaQuestion);
+                };
+
+                $delta = $io->ask('Delta (enter "<" to go back)', null, $validator);
                 if ($delta === '<') {
                     continue;
                 }
@@ -572,32 +533,18 @@ EOF
 
             $mid = $this->getMid($selectedChain->bid, $selectedChain->ask);
 
-            $table = new Table($output);
-            $table->setHeaders([new TableCell($selectedChain->description, ['colspan' => 3])]);
-            $table->setStyle('borderless');
-            $table->addRow(['Bid', 'Mid', 'Ask']);
-            $table->addRow([
-                $this->formatCurrency($selectedChain->bid),
-                $this->formatCurrency($mid),
-                $this->formatCurrency($selectedChain->ask),
-            ]);
-            $table->addRow([
-                'Volume',
-                new TableCell($this->formatNumber($selectedChain->volume, 0), ['colspan' => 2]),
-            ]);
-            $table->addRow([
-                'Open Interest',
-                new TableCell($this->formatNumber($selectedChain->open_interest, 0), ['colspan' => 2]),
-            ]);
-            $table->addRow([
-                'Delta',
-                new TableCell($selectedChain->greeks->delta, ['colspan' => 2]),
-            ]);
-            $table->render();
+            $io->definitionList(
+                $selectedChain->description,
+                new TableSeparator(),
+                ['Bid' => $this->formatCurrency($selectedChain->bid)],
+                ['Mid' => $this->formatCurrency($mid)],
+                ['Ask' => $this->formatCurrency($selectedChain->ask)],
+                ['Volume' => $this->formatNumber($selectedChain->volume, 0)],
+                ['Open Interest' => $this->formatNumber($selectedChain->open_interest, 0)],
+                ['Delta' => $selectedChain->greeks->delta]
+            );
 
-            $output->writeln('');
-
-            $confirm = $helper->ask($input, $output, new ConfirmationQuestion('Is this OK? ', false));
+            $confirm = $io->confirm('Is this OK?', false);
             if ($confirm === true) {
                 break;
             }
