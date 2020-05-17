@@ -57,7 +57,6 @@ EOF
             ['Option Buying Power' => $this->formatCurrency($balances->margin->option_buying_power)]
         );
 
-        $helper = $this->getHelper('question');
         $this->symbol = $io->ask('Symbol');
 
         $quote = $this->getQuote();
