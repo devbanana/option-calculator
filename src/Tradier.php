@@ -187,6 +187,13 @@ class Tradier
         return $response->history->day;
     }
 
+    public function getClock()
+    {
+        $response = $this->get('markets/clock');
+
+        return $response->clock;
+    }
+
     protected function getClient(): Client
     {
         return $this->client;
