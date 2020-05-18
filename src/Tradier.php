@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Devbanana\OptionCalculator;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Devbanana\OptionCalculator\Exception\TradierException;
 
 class Tradier
@@ -147,6 +148,29 @@ class Tradier
     {
         $response = $this->get("accounts/{$this->accountId}/balances");
         return $response->balances;
+    }
+
+    public function getOrders()
+    {
+        $response = $this->get("accounts/{$this->accountId}/orders");
+        if ($response->orders === null) {
+            return [];
+        } elseif (!is_array($response->orders->order)) {
+            return [$response->orders->order];
+        } else {
+            return $response->orders->order;
+        }
+    }
+
+    public function getOrder(int $order)
+    {
+        try {
+            $response = $this->get("accounts/{$this->accountId}/orders/$order");
+        } catch (ClientException $e) {
+            throw new TradierException("Order $order does not exist.");
+        }
+
+        return $response->order;
     }
 
     public function lookup(string $q, ?string $exchanges = null, ?string $types = null)
