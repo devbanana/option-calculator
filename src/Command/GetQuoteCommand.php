@@ -73,10 +73,18 @@ EOF
         ];
         $rows[] = new TableSeparator();
 
-        $rows[] = ['Open', $this->formatCurrency($quote->open)];
-        $rows[] = ['High', $this->formatCurrency($quote->high)];
-        $rows[] = ['Low', $this->formatCurrency($quote->low)];
-        $rows[] = ['Close', $this->formatCurrency($quote->close)];
+        if ($quote->open) {
+            $rows[] = ['Open', $this->formatCurrency($quote->open)];
+        }
+        if ($quote->high) {
+            $rows[] = ['High', $this->formatCurrency($quote->high)];
+        }
+        if ($quote->low) {
+            $rows[] = ['Low', $this->formatCurrency($quote->low)];
+        }
+        if ($quote->close) {
+            $rows[] = ['Close', $this->formatCurrency($quote->close)];
+        }
         $rows[] = ['Previous close', $this->formatCurrency($quote->prevclose)];
         if ($quote->type === 'option') {
             $rows[] = ['Volume', $this->formatNumber($quote->volume, 0)];
