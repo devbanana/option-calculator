@@ -551,6 +551,7 @@ EOF
                 ['Ask' => $this->formatCurrency($selectedChain->ask)],
                 ['Volume' => $this->formatNumber($selectedChain->volume, 0)],
                 ['Open Interest' => $this->formatNumber($selectedChain->open_interest, 0)],
+                ['IV' => $this->formatPercent($selectedChain->greeks->smv_vol)],
                 ['Delta' => $selectedChain->greeks->delta]
             );
 
