@@ -398,7 +398,7 @@ EOF
                 $expirationChoices[$i+1] = $exp->format('M j, Y');
             }
 
-            $expiration = $io->choice('Expiration', $expirationChoices);
+            $expiration = new \DateTime($io->choice('Expiration', $expirationChoices));
         }
 
         return $expiration;
