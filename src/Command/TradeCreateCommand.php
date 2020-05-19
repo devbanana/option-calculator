@@ -216,7 +216,15 @@ EOF
             $list[] = ['Order Cost' => $this->formatCurrency($order->order_cost)];
         }
 
-        $list[] = ['Est. Total Cost' => $this->formatCurrency($order->cost)];
+        if (isset($order->margin_change)) {
+            $list[] = ['Margin Requirement' => $this->formatCurrency($order->margin_change)];
+        }
+
+        if ($order->cost < 0) {
+            $list[] = ['Total Order Proceeds' => $this->formatCurrency(abs($order->cost))];
+        } else {
+            $list[] = ['Est. Total Cost' => $this->formatCurrency($order->cost)];
+        }
 
         $io->definitionList(...$list);
 
