@@ -189,8 +189,12 @@ class Tradier
         if ($response->securities === null) {
             throw new TradierException('No matches found.');
         }
+        $securities = $response->securities->security;
+        if (!is_array($securities)) {
+            $securities = [$securities];
+        }
 
-        return $response->securities->security;
+        return $securities;
     }
 
     public function getHistoricalQuotes(string $symbol, string $interval = 'daily', ?\DateTime $start, ?\DateTime $end = null)
