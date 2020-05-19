@@ -412,7 +412,6 @@ EOF
     protected function getChain(SymfonyStyle $io, \DateTime $expiration, string $optionType): \stdClass
     {
         $strikes = $this->tradier->getOptionStrikes($this->symbol, $expiration);
-        $chains = $this->tradier->getOptionChains($this->symbol, $expiration, true);
 
         $methodChoices = [
             1 => 'manually',
@@ -423,6 +422,7 @@ EOF
         // Repeat until a strike is chosen.
         while (true) {
             $method = $io->choice('How would you like to enter the strike?', $methodChoices);
+            $chains = $this->tradier->getOptionChains($this->symbol, $expiration, true);
             $selectedChain = null;
 
             if ($method === 'manually') {
