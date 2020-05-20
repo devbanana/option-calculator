@@ -22,7 +22,7 @@ class ListExpirationsCommand extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $symbol = $input->getArgument('symbol');
+        $symbol = strtoupper($input->getArgument('symbol'));
 
         $tradier = $this->createTradier();
         $expirations = $tradier->getOptionExpirations($symbol, [
