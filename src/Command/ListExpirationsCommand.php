@@ -5,6 +5,7 @@ namespace Devbanana\OptionCalculator\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ListExpirationsCommand extends BaseCommand
 {
@@ -22,6 +23,7 @@ class ListExpirationsCommand extends BaseCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $io = new SymfonyStyle($input, $output);
         $symbol = strtoupper($input->getArgument('symbol'));
 
         $tradier = $this->createTradier();
@@ -29,18 +31,17 @@ class ListExpirationsCommand extends BaseCommand
             'includeAllRoots' => 'true',
         ]);
 
-        $output->writeln([
-            "Expirations for $symbol",
-            str_repeat('=', strlen($symbol) + 16),
-            '',
-        ]);
+        $io->title("Expirations for $symbol");
 
         $now = new \DateTime('today');
+        $expirationList = [];
 
         foreach ($expirations as $date) {
             $dte = ($date->diff($now))->days;
-            $output->writeln($date->format('M j, Y') . " ($dte DTE)");
+            $expirationList[] = $date->format('M j, Y') . " ($dte DTE)";
         }
+
+        $io->listing($expirationList);
 
         return 0;
     }
