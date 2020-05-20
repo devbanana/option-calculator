@@ -166,6 +166,21 @@ class Tradier
         return $response->balances;
     }
 
+    public function getHistory()
+    {
+        $response = $this->get("accounts/{$this->accountId}/history");
+        if ($response->history === null) {
+            throw new TradierException('No history found.');
+        }
+
+        $history = $response->history->event;
+        if (!is_array($history)) {
+            $history = [$history];
+        }
+
+        return $history;
+    }
+
     public function getOrders()
     {
         $response = $this->get("accounts/{$this->accountId}/orders");
