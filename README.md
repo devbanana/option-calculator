@@ -6,13 +6,13 @@ Note that this is a work in progress, so while I can guarantee the master branch
 
 ## Available Commands
 
-* get:quote: Gets quotes for stocks or options. Just pass the symbol.
-* list:expirations: List the option expirations for a given underlying symbol.
-* list:chains: List the option chains for the given symbol and expiration date.
-* calculate:adx: Calculates the average directional index (including directional movement indicators) and returns them in a tabular format for the last 30 days.
-* calculate:rsi: Calculates the relative strength index for the given symbol for the last 30 days.
-* trade:create: Creates a new trade. It'll guide you through the process of choosing your stock and making the trade. Requires a brokerage account with [Tradier](https://brokerage.tradier.com/).
-* trade:modify: Modifies an existing order.
+* get:quote — Gets quotes for stocks or options. Just pass the symbol.
+* list:expirations — List the option expirations for a given underlying symbol.
+* list:chains — List the option chains for the given symbol and expiration date.
+* calculate:adx — Calculates the average directional index (including directional movement indicators) and returns them in a tabular format for the last 30 days.
+* calculate:rsi — Calculates the relative strength index for the given symbol for the last 30 days.
+* trade:create — Creates a new trade. It'll guide you through the process of choosing your stock and making the trade. Requires a brokerage account with [Tradier](https://brokerage.tradier.com/).
+* trade:modify — Modifies an existing order.
 
 ## API Keys
 
