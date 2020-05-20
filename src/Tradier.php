@@ -32,6 +32,13 @@ class Tradier
         $this->accountId = $accountId;
     }
 
+    public function requiresAccount(): void
+    {
+        if (!isset($this->accountId)) {
+            throw new TradierException('This call requires a Tradier brokerage account.');
+        }
+    }
+
     public function call(string $method, string $endpoint, array $query = [], ?array $fields = null)
     {
         $headers = [
@@ -134,12 +141,15 @@ class Tradier
 
     public function previewOrder(array $order)
     {
+        $this->requiresAccount();
         $order['preview'] = 'true';
         return $this->createOrder($order);
     }
 
     public function createOrder(array $order)
     {
+        $this->requiresAccount();
+
         $response = $this->post("accounts/{$this->accountId}/orders", [], $order);
 
         if (isset($response->errors)) {
@@ -151,6 +161,8 @@ class Tradier
 
     public function modifyOrder(string $orderId, array $order)
     {
+        $this->requiresAccount();
+
         $response = $this->put("accounts/{$this->accountId}/orders/$orderId", [], $order);
 
         if (isset($response->errors)) {
@@ -162,12 +174,16 @@ class Tradier
 
     public function getBalances()
     {
+        $this->requiresAccount();
+
         $response = $this->get("accounts/{$this->accountId}/balances");
         return $response->balances;
     }
 
     public function getHistory()
     {
+        $this->requiresAccount();
+
         $response = $this->get("accounts/{$this->accountId}/history");
         if ($response->history === null) {
             throw new TradierException('No history found.');
@@ -183,6 +199,8 @@ class Tradier
 
     public function getOrders()
     {
+        $this->requiresAccount();
+
         $response = $this->get("accounts/{$this->accountId}/orders");
         if ($response->orders === null) {
             return [];
@@ -195,6 +213,8 @@ class Tradier
 
     public function getOrder(int $order)
     {
+        $this->requiresAccount();
+
         try {
             $response = $this->get("accounts/{$this->accountId}/orders/$order");
         } catch (ClientException $e) {
