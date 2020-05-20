@@ -371,7 +371,7 @@ EOF
 
     protected function getExpiration(SymfonyStyle $io): \DateTime
     {
-        $expirations = $this->tradier->getOptionExpirations($this->symbol, ['includeAllRoots' => true]);
+        $expirations = $this->tradier->getOptionExpirations($this->symbol, true);
 
         $validator = function ($expiration) use ($expirations) {
             if ($expiration === 'list') {
