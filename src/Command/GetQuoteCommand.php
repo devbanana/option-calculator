@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
+use Devbanana\OptionCalculator\Exception\TradierException;
 
 class GetQuoteCommand extends BaseCommand
 {
@@ -18,6 +19,11 @@ class GetQuoteCommand extends BaseCommand
 
     protected function configure()
     {
+        $dateExample = new \DateTime('third Friday of next month');
+        $dateString = $dateExample->format('Y-m-d');
+        $dateReadable = $dateExample->format('m/d/y');
+        $dateOption = $dateExample->format('ymd');
+
         $this
             ->setDescription('Gets quotes for stocks or options')
             ->setHelp(
@@ -28,25 +34,100 @@ For a stock quote, simply pass the stock symbol.
 
 For options quotes, pass the option symbol, including expiration and strike price.
 
-For example, the SPY 06/19/20 300.0 call would be formatted like this:
+For example, the SPY $dateReadable 300.0 call would be formatted like this:
 
-SPY200619C00300000
+SPY{$dateOption}C00300000
 
-If you want to refresh the quotes every few seconds, add the --refresh argument. To specify how many seconds between refresh (it defaults to 10), specify --interval=<seconds>.
+If you don't want to try to figure out the option symbol, you can also specify the underlying, followed by specifying the expiration, option type and strike as follows:
+
+get:quote SPY --expiration=$dateString --call --strike=300
+
+You can also specify a put as follows:
+
+get:quote SPY --expiration=$dateString --put --strike=300
 EOF
             )
             ->addArgument('symbol', InputArgument::REQUIRED, 'Stock or option symbol')
+            ->addOption('expiration', null, InputOption::VALUE_REQUIRED, 'Option expiration')
+            ->addOption('call', null, InputOption::VALUE_NONE, 'Limit to call options')
+            ->addOption('put', null, InputOption::VALUE_NONE, 'Limit to put options')
+            ->addOption('strike', null, InputOption::VALUE_REQUIRED, 'Option strike')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $symbol = $input->getArgument('symbol');
-
-        $tradier = $this->createTradier();
         $io = new SymfonyStyle($input, $output);
 
+        $symbol = $input->getArgument('symbol');
+        $expiration = $input->getOption('expiration');
+        $call = $input->getOption('call');
+        $put = $input->getOption('put');
+        $strike = $input->getOption('strike');
+
+        $tradier = $this->createTradier();
+
         $quote = $tradier->getQuote($symbol, true);
+
+        // Should we look for an option?
+        if (
+            $quote->type !== 'option'
+            && ($expiration || $call || $put || $strike)
+        ) {
+            if (!$expiration) {
+                $io->error('Expiration is required in order to find an option.');
+                return 1;
+            }
+
+            try {
+                $expiration = new \DateTime($expiration);
+                $chains = $tradier->getOptionChains($symbol, $expiration);
+            } catch (TradierException $e) {
+                $io->error("That is not a valid expiration for $symbol.");
+                return 1;
+            } catch (\Exception $e) {
+                $io->error('Expiration must be a valid date.');
+                return 1;
+            }
+
+            if (!$call && !$put) {
+                $io->error('Please specify one of either --call or --put.');
+                return 1;
+            }
+
+            if (!$strike) {
+                $io->error('Strike is required in order to find an option.');
+                return 1;
+            } elseif (!is_numeric($strike)) {
+                $io->error('Strike must be a number.');
+                return 1;
+            }
+
+            $strike = floatval($strike);
+            $strikes = array_column($chains, 'strike');
+            if (!in_array($strike, $strikes)) {
+                $io->error("That is not a valid strike for $symbol on " . $expiration->format('M j'));
+                return 1;
+            }
+
+            // Find the chain
+            foreach ($chains as $chain) {
+                if ($chain->expiration_date !== $expiration->format('Y-m-d')) {
+                    continue;
+                }
+                if ($call && $chain->option_type !== 'call') {
+                    continue;
+                }
+                if ($put && $chain->option_type === 'put') {
+                    continue;
+                }
+                if ($strike !== $chain->strike) {
+                    continue;
+                }
+                $quote = $tradier->getQuote($chain->symbol, true);
+            }
+        }
+
         $this->renderQuoteTable($quote, $io);
 
         return 0;
