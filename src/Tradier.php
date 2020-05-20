@@ -61,6 +61,11 @@ class Tradier
         return $this->call('POST', $endpoint, $query, $fields);
     }
 
+    public function put(string $endpoint, array $query = [], array $fields = [])
+    {
+        return $this->call('PUT', $endpoint, $query, $fields);
+    }
+
     public function getQuote(string $symbol, bool $greeks = false)
     {
         $response = $this->get('markets/quotes', [
