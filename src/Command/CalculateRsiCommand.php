@@ -30,7 +30,7 @@ class CalculateRsiCommand extends BaseCommand
     {
         $symbol = $input->getArgument('symbol');
         $days = $input->getOption('days');
-        $period = $input->getOption('period');
+        $period = intval($input->getOption('period'));
 
         $start = new \DateTime('-1 year');
         $tradier = $this->createTradier();
