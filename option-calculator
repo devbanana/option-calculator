@@ -9,6 +9,7 @@ use Devbanana\OptionCalculator\Command\ListExpirationsCommand;
 use Devbanana\OptionCalculator\Command\GetQuoteCommand;
 use Devbanana\OptionCalculator\Command\ChainCommand;
 use Devbanana\OptionCalculator\Command\TradeCreateCommand;
+use Devbanana\OptionCalculator\Command\TradeModifyCommand;
 use Devbanana\OptionCalculator\Command\CalculateRsiCommand;
 use Devbanana\OptionCalculator\Command\CalculateAdxCommand;
 
@@ -22,6 +23,7 @@ $application->addCommands([
     new GetQuoteCommand(),
     new ChainCommand(),
     new TradeCreateCommand(),
+    new TradeModifyCommand(),
     new CalculateRsiCommand(),
     new CalculateAdxCommand(),
 ]);
