@@ -149,6 +149,17 @@ class Tradier
         return $response->order;
     }
 
+    public function modifyOrder(string $orderId, array $order)
+    {
+        $response = $this->put("accounts/{$this->accountId}/orders/$orderId", [], $order);
+
+        if (isset($response->errors)) {
+            throw new TradierException($response->errors->error);
+        }
+
+        return $response->order;
+    }
+
     public function getBalances()
     {
         $response = $this->get("accounts/{$this->accountId}/balances");
