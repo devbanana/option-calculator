@@ -130,6 +130,10 @@ class Tradier
             'greeks' => $greeks === true ? 'true' : 'false',
         ]);
 
+        if ($response->options === null) {
+            throw new TradierException('No option chains were found.');
+        }
+
         $chains = [];
 
         foreach ($response->options->option as $option) {
