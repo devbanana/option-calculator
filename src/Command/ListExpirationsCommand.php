@@ -27,9 +27,7 @@ class ListExpirationsCommand extends BaseCommand
         $symbol = strtoupper($input->getArgument('symbol'));
 
         $tradier = $this->createTradier();
-        $expirations = $tradier->getOptionExpirations($symbol, [
-            'includeAllRoots' => 'true',
-        ]);
+        $expirations = $tradier->getOptionExpirations($symbol, true);
 
         $io->title("Expirations for $symbol");
 

@@ -83,11 +83,17 @@ class Tradier
         return $response->quotes->quote;
     }
 
-    public function getOptionExpirations(string $symbol, ?array $additionalParams = []): array
+    public function getOptionExpirations(string $symbol, bool $includeAllRoutes = false, bool $strikes = false): array
     {
-        $params = [
-            'symbol' => $symbol,
-        ] + $additionalParams;
+        $params = [];
+        $params['symbol'] = $symbol;
+
+        if ($includeAllRoutes) {
+            $params['includeAllRoutes'] = 'true';
+        }
+        if ($strikes) {
+            $params['strikes'] = 'true';
+        }
 
         $response = $this->get('markets/options/expirations', $params);
 
