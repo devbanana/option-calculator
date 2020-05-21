@@ -12,6 +12,7 @@ use Devbanana\OptionCalculator\Command\TradeCreateCommand;
 use Devbanana\OptionCalculator\Command\TradeModifyCommand;
 use Devbanana\OptionCalculator\Command\CalculateRsiCommand;
 use Devbanana\OptionCalculator\Command\CalculateAdxCommand;
+use Devbanana\OptionCalculator\Command\CalculateExpectedMoveCommand;
 
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__.'/.env');
@@ -26,6 +27,7 @@ $application->addCommands([
     new TradeModifyCommand(),
     new CalculateRsiCommand(),
     new CalculateAdxCommand(),
+    new CalculateExpectedMoveCommand(),
 ]);
 
 $application->run();

@@ -79,6 +79,9 @@ class Tradier
             'symbols' => $symbol,
             'greeks' => $greeks === true ? 'true' : 'false',
         ]);
+        if ($response->quotes === null) {
+            throw new TradierException('Unable to fetch market data for the provided symbol.');
+        }
 
         return $response->quotes->quote;
     }
@@ -281,6 +284,70 @@ class Tradier
         $response = $this->get('markets/clock');
 
         return $response->clock;
+    }
+
+    /**
+     * Fetches the expected move of the stock in the given time.
+     *
+     * This is not an API method. This is a helper method to calculate the expected move of a stock.
+     *
+     * @param string $symbol The stock symbol to calculate.
+     * @param \DateTime|null $expiration The expiration for which to calculate the expected move.
+     *
+     * @return float The expected move percent.
+     */
+    public function getExpectedMove(string $symbol, ?\DateTime $expiration = null)
+    {
+        $quote = $this->getQuote($symbol);
+        if ($quote->type === 'option') {
+            throw new TradierException('Symbol must be a stock, option provided.');
+        }
+
+        // If expiration is null, fetch first expiration.
+        // Then we return expected move in one day.
+        if (!$expiration) {
+            $expirations = $this->getOptionExpirations($symbol);
+            $expiration = $expirations[0];
+            $dte = 1;
+        }
+
+        try {
+            $chains = $this->getOptionChains($symbol, $expiration, true);
+        } catch (TradierException $e) {
+            throw new TradierException('Invalid expiration provided.');
+        }
+
+        if (!isset($dte)) {
+            // If DTE is already set, then DTE is 1 since we set the default above.
+            // If not, then DTE is the difference between the expiration date and today.
+            $today = new \DateTime('today');
+            $dte = $expiration->diff($today)->days;
+        }
+
+        // Find ATM call.
+        $diff = null;
+        foreach ($chains as $possibleChain) {
+            // Ignore puts.
+            if ($possibleChain->option_type === 'put') {
+                continue;
+            }
+
+            $chainDiff = abs($possibleChain->strike - $quote->last);
+            if ($diff === null) {
+                $diff = $chainDiff;
+                $atmChain = $possibleChain;
+            } elseif ($chainDiff < $diff) {
+                $diff = $chainDiff;
+                $atmChain = $possibleChain;
+            }
+        }
+
+        $volatility = $atmChain->greeks->smv_vol;
+
+        // Calculate expected move percent.
+        $expectedMove = $volatility * sqrt($dte / 365.0);
+
+        return $expectedMove;
     }
 
     protected function getClient(): Client
