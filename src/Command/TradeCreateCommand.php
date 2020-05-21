@@ -577,7 +577,13 @@ EOF
                 ['Volume' => $this->formatNumber($selectedChain->volume, 0)],
                 ['Open Interest' => $this->formatNumber($selectedChain->open_interest, 0)],
                 ['IV' => $this->formatPercent($selectedChain->greeks->smv_vol)],
-                ['Delta' => $selectedChain->greeks->delta]
+                new TableSeparator(),
+                'Greeks',
+                new TableSeparator(),
+                ['Delta' => $selectedChain->greeks->delta],
+                ['Gamma' => $selectedChain->greeks->gamma],
+                ['Theta' => $selectedChain->greeks->theta],
+                ['Vega' => $selectedChain->greeks->vega]
             );
 
             $confirm = $io->confirm('Is this OK?', false);
