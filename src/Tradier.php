@@ -79,7 +79,7 @@ class Tradier
             'symbols' => $symbol,
             'greeks' => $greeks === true ? 'true' : 'false',
         ]);
-        if ($response->quotes === null) {
+        if (!isset($response->quotes->quote)) {
             throw new TradierException('Unable to fetch market data for the provided symbol.');
         }
 
