@@ -536,9 +536,9 @@ EOF
                     }
                     // Add 20% margin to not be too restrictive.
                     $marginDelta = $delta * 1.2;
-                    if ($optionType === 'call' && $chain->greeks->delta <= $marginDelta) {
+                    if ($optionType === 'call' && isset($chain->greeks) && $chain->greeks->delta <= $marginDelta) {
                         $possibleChains[] = $chain;
-                    } elseif ($optionType === 'put' && $chain->greeks->delta >= $marginDelta) {
+                    } elseif ($optionType === 'put' && isset($chain->greeks) && $chain->greeks->delta >= $marginDelta) {
                         $possibleChains[] = $chain;
                     }
                 }
