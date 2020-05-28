@@ -226,29 +226,31 @@ EOF
             $list[] = ['Est. Total Cost' => $this->formatCurrency($order->cost)];
         }
 
-        $list[] = new TableSeparator();
-        $greeks = [
-            'delta' => 0,
-            'gamma' => 0,
-            'theta' => 0,
-            'vega' => 0,
-        ];
-        foreach ($this->chains as $i => $chain) {
-            if (strpos($this->sides[$i], 'buy') !== false) {
-                $greeks['delta'] += $chain->greeks->delta;
-                $greeks['gamma'] += $chain->greeks->gamma;
-                $greeks['theta'] += $chain->greeks->theta;
-                $greeks['vega'] += $chain->greeks->vega;
-            } else {
-                $greeks['delta'] -= $chain->greeks->delta;
-                $greeks['gamma'] -= $chain->greeks->gamma;
-                $greeks['theta'] -= $chain->greeks->theta;
-                $greeks['vega'] -= $chain->greeks->vega;
+        if (isset($this->chains)) {
+            $list[] = new TableSeparator();
+            $greeks = [
+                'delta' => 0,
+                'gamma' => 0,
+                'theta' => 0,
+                'vega' => 0,
+            ];
+            foreach ($this->chains as $i => $chain) {
+                if (strpos($this->sides[$i], 'buy') !== false) {
+                    $greeks['delta'] += $chain->greeks->delta;
+                    $greeks['gamma'] += $chain->greeks->gamma;
+                    $greeks['theta'] += $chain->greeks->theta;
+                    $greeks['vega'] += $chain->greeks->vega;
+                } else {
+                    $greeks['delta'] -= $chain->greeks->delta;
+                    $greeks['gamma'] -= $chain->greeks->gamma;
+                    $greeks['theta'] -= $chain->greeks->theta;
+                    $greeks['vega'] -= $chain->greeks->vega;
+                }
             }
-        }
 
-        foreach ($greeks as $greek => $value) {
-            $list[] = ["Net " . ucfirst($greek) => round($value, 6)];
+            foreach ($greeks as $greek => $value) {
+                $list[] = ["Net " . ucfirst($greek) => round($value, 6)];
+            }
         }
 
         $io->definitionList(...$list);
