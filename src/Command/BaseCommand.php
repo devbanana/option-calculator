@@ -6,6 +6,7 @@ namespace Devbanana\OptionCalculator\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Devbanana\OptionCalculator\Tradier;
+use Devbanana\OptionCalculator\IexClient;
 
 abstract class BaseCommand extends Command
 {
@@ -36,6 +37,15 @@ abstract class BaseCommand extends Command
         }
 
         return $tradier;
+    }
+
+    protected function createIex(): IexClient
+    {
+        if (!isset($_ENV['IEX_PUBLIC_TOKEN']) || empty($_ENV['IEX_TOKEN'])) {
+            throw new \RuntimeException('IEX must be configured with its API tokens.');
+        }
+
+        return new IexClient($_ENV['IEX_TOKEN']);
     }
 
     protected function formatCurrency($number, string $currency = 'USD'): string
