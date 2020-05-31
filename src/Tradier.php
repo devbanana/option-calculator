@@ -193,12 +193,37 @@ class Tradier
         return $response->balances;
     }
 
-    public function getHistory()
+    public function getPositions()
     {
         $this->requiresAccount();
 
-        $response = $this->get("accounts/{$this->accountId}/history");
-        if ($response->history === null) {
+        $response = $this->get("accounts/{$this->accountId}/positions");
+        if ($response->positions === null) {
+            throw new TradierException('There are currently no positions.');
+        }
+
+        return $response->positions->position;
+    }
+
+    public function getHistory(int $page = 1, int $limit = 25, ?string $type = null, ?\DateTime $start = null, ?\DateTime $end = null)
+    {
+        $this->requiresAccount();
+
+        $params = [];
+        $params['page'] = $page;
+        $params['limit'] = $limit;
+        if ($type !== null) {
+            $params['type'] = $type;
+        }
+        if ($start !== null) {
+            $params['start'] = $start->format('Y-m-d');
+        }
+        if ($end !== null) {
+            $params['end'] = $end->format('Y-m-d');
+        }
+
+        $response = $this->get("accounts/{$this->accountId}/history", $params);
+        if ($response->history === 'null') {
             throw new TradierException('No history found.');
         }
 

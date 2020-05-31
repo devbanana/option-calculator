@@ -8,6 +8,7 @@ use Symfony\Component\Console\Application;
 use Devbanana\OptionCalculator\Command\ListExpirationsCommand;
 use Devbanana\OptionCalculator\Command\GetQuoteCommand;
 use Devbanana\OptionCalculator\Command\ChainCommand;
+use Devbanana\OptionCalculator\Command\AccountPositionsCommand;
 use Devbanana\OptionCalculator\Command\TradeCreateCommand;
 use Devbanana\OptionCalculator\Command\TradeModifyCommand;
 use Devbanana\OptionCalculator\Command\TradeStatusCommand;
@@ -24,6 +25,7 @@ $application->addCommands([
     new ListExpirationsCommand(),
     new GetQuoteCommand(),
     new ChainCommand(),
+    new AccountPositionsCommand(),
     new TradeCreateCommand(),
     new TradeModifyCommand(),
     new TradeStatusCommand(),
