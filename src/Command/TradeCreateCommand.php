@@ -40,6 +40,7 @@ Opens a new trade on Tradier.
 To use this command, you must have the TRADIER_ACCOUNT_ID environment variable set.
 EOF
             )
+            ->addArgument('symbol', InputArgument::OPTIONAL, 'Symbol to trade')
         ;
     }
 
@@ -57,10 +58,14 @@ EOF
             ['Option Buying Power' => $this->formatCurrency($balances->margin->option_buying_power)]
         );
 
-        $symbolQuestion = new Question('Symbol');
-        $symbolQuestion->setAutocompleterCallback([$this, 'lookup']);
+        if ($input->getArgument('symbol')) {
+            $this->symbol = strtoupper($input->getArgument('symbol'));
+        } else {
+            $symbolQuestion = new Question('Symbol');
+            $symbolQuestion->setAutocompleterCallback([$this, 'lookup']);
 
-        $this->symbol = $io->askQuestion($symbolQuestion);
+            $this->symbol = $io->askQuestion($symbolQuestion);
+        }
 
         $quote = $this->getQuote();
 
