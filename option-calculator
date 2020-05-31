@@ -10,6 +10,7 @@ use Devbanana\OptionCalculator\Command\GetQuoteCommand;
 use Devbanana\OptionCalculator\Command\ChainCommand;
 use Devbanana\OptionCalculator\Command\TradeCreateCommand;
 use Devbanana\OptionCalculator\Command\TradeModifyCommand;
+use Devbanana\OptionCalculator\Command\TradeStatusCommand;
 use Devbanana\OptionCalculator\Command\CalculateRsiCommand;
 use Devbanana\OptionCalculator\Command\CalculateAdxCommand;
 use Devbanana\OptionCalculator\Command\CalculateExpectedMoveCommand;
@@ -25,6 +26,7 @@ $application->addCommands([
     new ChainCommand(),
     new TradeCreateCommand(),
     new TradeModifyCommand(),
+    new TradeStatusCommand(),
     new CalculateRsiCommand(),
     new CalculateAdxCommand(),
     new CalculateExpectedMoveCommand(),
